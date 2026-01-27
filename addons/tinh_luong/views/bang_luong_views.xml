@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_bang_luong_tree_upgrade" model="ir.ui.view">
+        <field name="name">tinh.luong.bang.luong.tree.upgrade</field>
+        <field name="model">tinh.luong.bang.luong</field>
+        <field name="arch" type="xml">
+            <tree string="Danh sách bảng lương" decoration-info="state == 'draft'" decoration-success="state == 'paid'">
+                <field name="ma_dinh_danh"/>
+                <field name="thang"/>
+                <field name="nam"/>
+                <field name="ngay_cong_chuan" optional="show"/>
+                <field name="so_cong_thuc_te" string="Công tính lương"/>
+                <field name="so_ngay_huong_phu_cap" string="Ngày đi làm"/>
+                <field name="tong_nhan" sum="Tổng quỹ lương" widget="monetary" decoration-bf="1"/>
+                <field name="state" widget="badge" decoration-info="state == 'confirmed'" decoration-success="state == 'paid'"/>
+                <button name="action_view_payslip_dialog" string="Xem Phiếu" type="object" icon="fa-file-text-o"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_bang_luong_form_upgrade" model="ir.ui.view">
+        <field name="name">tinh.luong.bang.luong.form.upgrade</field>
+        <field name="model">tinh.luong.bang.luong</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" string="Xác nhận lương" type="object" states="draft" class="oe_highlight"/>
+                    <button name="action_pay" string="Đã thanh toán" type="object" states="confirmed" class="oe_highlight"/>
+                    <button name="action_set_draft" string="Về bản nháp" type="object" states="confirmed,cancel"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,paid"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="ma_dinh_danh" class="oe_edit_only"/>
+                        <h1><field name="ma_dinh_danh"/></h1>
+                    </div>
+                    <group>
+                        <group string="Kỳ lương">
+                            <field name="thang"/>
+                            <field name="nam"/>
+                        </group>
+                        <group string="Tóm tắt công trạng">
+                            <field name="ngay_cong_chuan"/>
+                            <field name="so_cong_thuc_te" string="Công tính lương (gồm Phép)" decoration-bf="1"/>
+                            <field name="so_ngay_huong_phu_cap" string="Ngày đi làm thực tế" decoration-info="1"/>
+                            <field name="so_gio_tang_ca" widget="float_time"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Chi tiết thu nhập">
+                            <group>
+                                <group string="Các khoản nhận">
+                                    <field name="luong_thoi_gian" widget="monetary"/>
+                                    <label for="so_gio_tang_ca" string="Lương tăng ca"/>
+                                    <div class="o_row">
+                                        <field name="so_gio_tang_ca" class="oe_inline"/> giờ = <field name="tien_tang_ca" widget="monetary" class="oe_inline"/>
+                                    </div>
+                                    <field name="tien_an_trua" widget="monetary" string="Phụ cấp ăn trưa"/>
+                                    <field name="tien_xang_xe" widget="monetary" string="Phụ cấp xăng xe"/>
+                                    <field name="tien_thuong_kpi" widget="monetary" decoration-success="1"/>
+                                </group>
+                                <group string="Các khoản trừ">
+                                    <field name="tien_phat_muon" widget="monetary" decoration-danger="1"/>
+                                    <field name="bhxh_nv" widget="monetary"/>
+                                    <field name="thue_tncn" widget="monetary"/>
+                                </group>
+                            </group>
+                            <group class="oe_subtotal_footer">
+                                <field name="tong_nhan" widget="monetary" class="oe_subtotal_footer_separator" style="font-size: 1.5em;"/>
+                            </group>
+                        </page>
+                        <page string="Xem trước phiếu lương">
+                            <div style="background: #f4f7f6; padding: 20px; border-radius: 5px;">
+                                <field name="phieu_luong_html" widget="html" readonly="1"/>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_bang_luong_popup_form" model="ir.ui.view">
+        <field name="name">tinh.luong.bang.luong.popup.form</field>
+        <field name="model">tinh.luong.bang.luong</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <form string="Phiếu lương chi tiết">
+                <sheet>
+                    <field name="phieu_luong_html" widget="html" readonly="1"/>
+                </sheet>
+                <footer>
+                    <button string="Đóng" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_bang_luong" model="ir.actions.act_window">
+        <field name="name">Bảng Lương Tháng</field>
+        <field name="res_model">tinh.luong.bang.luong</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Chưa có bản ghi lương nào. Hãy tạo mới hoặc chốt công tháng này!
+            </p>
+        </field>
+    </record>
+</odoo>

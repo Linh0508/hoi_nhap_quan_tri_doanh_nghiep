@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_dang_ky_ca_lam_theo_ngay_form" model="ir.ui.view">
+            <field name="name">dang_ky_ca_lam_theo_ngay.form</field>
+            <field name="model">dang_ky_ca_lam_theo_ngay</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="ma_dot_ngay" placeholder="VD: DK-2024-001"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group string="Thông tin nhân viên">
+                                <field name="dot_dang_ky_id" options="{'no_create': True}"/>
+                                <field name="nhan_vien_id" options="{'no_create': True}"/>
+                            </group>
+                            <group string="Chi tiết ca làm">
+                                <field name="ngay_lam"/>
+                                <field name="ca_lam" widget="radio" options="{'horizontal': true}"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_dang_ky_ca_lam_theo_ngay_tree" model="ir.ui.view">
+            <field name="name">dang_ky_ca_lam_theo_ngay.tree</field>
+            <field name="model">dang_ky_ca_lam_theo_ngay</field>
+            <field name="arch" type="xml">
+                <tree decoration-info="ca_lam == 'Cả ngày'">
+                    <field name="ma_dot_ngay"/>
+                    <field name="dot_dang_ky_id"/>
+                    <field name="nhan_vien_id"/>
+                    <field name="ngay_lam"/>
+                    <field name="ca_lam"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_dang_ky_ca_lam_theo_ngay" model="ir.actions.act_window">
+            <field name="name">Đăng ký ca làm theo ngày</field>
+            <field name="res_model">dang_ky_ca_lam_theo_ngay</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+    </data>
+</odoo>

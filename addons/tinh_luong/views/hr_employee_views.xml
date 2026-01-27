@@ -1,0 +1,29 @@
+<odoo>
+    <record id="view_nhan_vien_form_inherit_salary" model="ir.ui.view">
+        <field name="name">nhan.vien.form.inherit.salary</field>
+        <field name="model">nhan_vien</field>
+        <field name="inherit_id" ref="nhan_su.view_nhan_vien_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <notebook>
+                    <page string="Cấu hình Lương &amp; Thưởng">
+                        <group>
+                            <group string="Lương &amp; Phụ cấp">
+                                <field name="luong_co_ban"/>
+                                <field name="phu_cap_an_trua"/>
+                                <field name="phu_cap_khac"/>
+                            </group>
+                            <group string="BHXH &amp; Kỷ luật">
+                                <field name="luong_bhxh"/>
+                                <field name="don_gia_phat_muon"/>
+                            </group>
+                            <group string="Chỉ tiêu KPI">
+                                <field name="thuong_kpi_dinh_muc"/>
+                            </group>
+                        </group>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+</odoo>

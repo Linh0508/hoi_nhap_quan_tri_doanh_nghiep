@@ -1,0 +1,9 @@
+<odoo>
+    <menuitem id="menu_tinh_luong_root" name="QUẢN LÝ LƯƠNG" sequence="10" web_icon="hr_payroll,static/description/icon.png"/>
+
+    <menuitem id="menu_payroll_ops" name="Nghiệp vụ lương" parent="menu_tinh_luong_root" sequence="10"/>
+    <menuitem id="menu_action_salary" name="Bảng lương nhân viên" parent="menu_payroll_ops" action="action_bang_luong" sequence="10"/>
+
+    <menuitem id="menu_kpi_ops" name="Đánh giá &amp; KPI" parent="menu_tinh_luong_root" sequence="20"/>
+    <menuitem id="menu_action_kpi_list" name="Bảng điểm KPI tháng" parent="menu_kpi_ops" action="action_kpi_danh_gia" sequence="10"/>
+</odoo>

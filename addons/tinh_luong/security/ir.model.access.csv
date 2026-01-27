@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_kpi_danh_gia,kpi.danh.gia,model_kpi_danh_gia,base.group_user,1,1,1,1
+access_tinh_luong_bang_luong,tinh.luong.bang.luong,model_tinh_luong_bang_luong,base.group_user,1,1,1,1

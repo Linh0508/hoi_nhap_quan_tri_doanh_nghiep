@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_kpi_danh_gia_tree" model="ir.ui.view">
+        <field name="name">kpi.danh.gia.tree</field>
+        <field name="model">kpi.danh.gia</field>
+        <field name="arch" type="xml">
+            <tree string="Bảng theo dõi KPI tự động" create="1" delete="1"
+                decoration-success="diem_kpi == 100" 
+                decoration-warning="diem_kpi &lt; 100" 
+                decoration-danger="diem_kpi &lt; 50">
+                
+                <header>
+                    <button name="action_init_kpi_records" string="Khởi tạo tháng này" 
+                            type="object" class="oe_highlight"/>
+                    <button name="action_recompute_kpi" string="Cập nhật dữ liệu" 
+                            type="object" class="btn-secondary"/>
+                </header>
+
+                <field name="ma_dinh_danh" string="Nhân viên"/>
+                <field name="thang"/>
+                <field name="nam" groups="base.group_no_one"/>
+                <field name="diem_kpi" string="Tỷ lệ đạt (%)" avg="Trung bình KPI"/>
+                <field name="tien_thuong" string="Tiền thưởng thực tế" sum="Tổng quỹ thưởng" widget="monetary"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'done'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_kpi_danh_gia_search" model="ir.ui.view">
+        <field name="name">kpi.danh.gia.search</field>
+        <field name="model">kpi.danh.gia</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="ma_dinh_danh"/>
+                <filter string="KPI đạt 100%" name="full_kpi" domain="[('diem_kpi', '=', 100)]"/>
+                <group expand="0" string="Gom nhóm">
+                    <filter string="Nhân viên" name="group_nv" context="{'group_by': 'ma_dinh_danh'}"/>
+                    <filter string="Tháng" name="group_thang" context="{'group_by': 'thang'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_kpi_danh_gia" model="ir.actions.act_window">
+        <field name="name">KPI Chuyên Cần</field>
+        <field name="res_model">kpi.danh.gia</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_kpi_danh_gia_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Bấm "Khởi tạo tháng này" để bắt đầu theo dõi KPI.
+            </p>
+        </field>
+    </record>
+</odoo>
