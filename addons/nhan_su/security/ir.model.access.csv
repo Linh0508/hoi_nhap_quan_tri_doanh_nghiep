@@ -1,8 +1,9 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_nhan_vien,nhan_vien.nhan_vien,model_nhan_vien,base.group_user,1,1,1,1
-access_phong_ban,phong_ban.phong_ban,model_phong_ban,base.group_user,1,1,1,1
-access_chuc_vu,chuc_vu.chuc_vu,model_chuc_vu,base.group_user,1,1,1,1
-access_lich_su_cong_tac,lich_su_cong_tac.lich_su_cong_tac,model_lich_su_cong_tac,base.group_user,1,1,1,1
-access_chung_chi_bang_cap,chung_chi_bang_cap.chung_chi_bang_cap,model_chung_chi_bang_cap,base.group_user,1,1,1,1
-access_danh_sach_chung_chi_bang_cap,danh_sach_chung_chi_bang_cap.danh_sach_chung_chi_bang_cap,model_danh_sach_chung_chi_bang_cap,base.group_user,1,1,1,1
 
+access_hr_employee_hr,hr.employee.hr,model_hr_employee,group_role_hr,1,1,1,1
+access_don_vi_hr,don_vi.hr,model_don_vi,group_role_hr,1,1,1,1
+access_phong_ban_hr,phong_ban.hr,model_phong_ban,group_role_hr,1,1,1,1
+access_chuc_vu_hr,chuc_vu.hr,model_chuc_vu,group_role_hr,1,1,1,1
+access_lich_su_cong_tac_hr,lsct.hr,model_lich_su_cong_tac,group_role_hr,1,1,1,1
+access_chung_chi_hr,ccbc.hr,model_chung_chi_bang_cap,group_role_hr,1,1,1,1
+access_ds_chung_chi_hr,dscc.hr,model_danh_sach_chung_chi_bang_cap,group_role_hr,1,1,1,1

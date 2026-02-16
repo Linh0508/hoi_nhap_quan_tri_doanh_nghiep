@@ -11,8 +11,11 @@
         'cham_cong',
     ],
     'data': [
+        'security/security.xml',
     'security/ir.model.access.csv',
-    'views/hr_employee_views.xml',
+    'data/email_template.xml',
+    'data/cron.xml',
+    'views/hr_employee_extend_views.xml',
     'views/kpi_danh_gia_views.xml', # File mới
     'views/bang_luong_views.xml',
     'views/menu.xml',

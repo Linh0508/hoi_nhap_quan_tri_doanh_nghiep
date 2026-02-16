@@ -10,7 +10,7 @@ class KPIDanhGia(models.Model):
     _order = 'nam desc, thang desc'
     _rec_name = 'ma_dinh_danh'
 
-    ma_dinh_danh = fields.Many2one('nhan_vien', string="Nhân viên", required=True, tracking=True)
+    ma_dinh_danh = fields.Many2one('hr.employee', string="Nhân viên", required=True, tracking=True)
     thang = fields.Selection([
         ('1', 'Tháng 1'), ('2', 'Tháng 2'), ('3', 'Tháng 3'),
         ('4', 'Tháng 4'), ('5', 'Tháng 5'), ('6', 'Tháng 6'),
@@ -76,7 +76,7 @@ class KPIDanhGia(models.Model):
         """Khởi tạo danh sách KPI cho tháng hiện tại"""
         current_thang = str(date.today().month)
         current_nam = date.today().year
-        nhan_viens = self.env['nhan_vien'].search([])
+        nhan_viens = self.env['hr.employee'].search([])
         for nv in nhan_viens:
             exists = self.search([
                 ('ma_dinh_danh', '=', nv.id),

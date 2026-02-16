@@ -22,11 +22,13 @@
     # any module necessary for this one to work correctly
     'depends': [
         'base',
-        'nhan_su'
+        'nhan_su',
+        'hr'
     ],
 
     # always loaded
     'data': [
+        'security/security.xml',
         'security/ir.model.access.csv',
         'views/dang_ky_ca_lam_theo_ngay.xml',
         'views/bang_cham_cong.xml',

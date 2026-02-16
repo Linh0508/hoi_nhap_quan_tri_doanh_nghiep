@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Category -->
+        <record id="module_category_hr_custom" model="ir.module.category">
+            <field name="name">Quản lý Nhân sự</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- HR Group -->
+        <record id="group_role_hr" model="res.groups">
+            <field name="name">Nhân sự (HR)</field>
+            <field name="category_id" ref="module_category_hr_custom"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+    </data>
+</odoo>

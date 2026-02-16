@@ -9,7 +9,7 @@ class DangKyCaLamTheoNgay(models.Model):
 
     ma_dot_ngay = fields.Char("Mã đợt ngày", required=True)
     dot_dang_ky_id = fields.Many2one('dot_dang_ky', string="Đợt đăng ký", required=True)
-    nhan_vien_id = fields.Many2one('nhan_vien', string="Nhân viên", required=True)
+    nhan_vien_id = fields.Many2one('hr.employee', string="Nhân viên", required=True)
     ngay_lam = fields.Date(string="Ngày làm", required=True)
     ca_lam = fields.Selection([
         ("Sáng", "Sáng"),

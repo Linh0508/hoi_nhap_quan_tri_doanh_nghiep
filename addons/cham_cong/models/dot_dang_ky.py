@@ -17,7 +17,7 @@ class DotDangKy(models.Model):
     )
     ngay_bat_dau = fields.Date("Thời gian bắt đầu", compute='_compute_thoi_gian', store=True)
     ngay_ket_thuc = fields.Date("Thời gian kết thúc", compute='_compute_thoi_gian', store=True)
-    nhan_vien_ids = fields.Many2many('nhan_vien', string="Nhân viên đăng ký")
+    nhan_vien_ids = fields.Many2many('hr.employee', string="Nhân viên đăng ký")
     han_dang_ky = fields.Date("Hạn đăng ký", required=True)
     trang_thai_dang_ky = fields.Selection(
         [

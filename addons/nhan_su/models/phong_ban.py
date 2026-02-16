@@ -1,4 +1,5 @@
-from odoo import models, fields, api
+from odoo import models, fields
+
 
 class PhongBan(models.Model):
     _name = 'phong_ban'
@@ -7,4 +8,3 @@ class PhongBan(models.Model):
 
     ma_phong_ban = fields.Char("Mã phòng ban", required=True)
     ten_phong_ban = fields.Char("Tên phòng ban", required=True)
-    

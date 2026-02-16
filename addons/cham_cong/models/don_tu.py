@@ -6,7 +6,7 @@ class DonTu(models.Model):
     _description = 'Đơn từ'
     _rec_name = 'nhan_vien_id'
 
-    nhan_vien_id = fields.Many2one('nhan_vien', string="Nhân viên", required=True)
+    nhan_vien_id = fields.Many2one('hr.employee', string="Nhân viên", required=True)
     ngay_lam_don = fields.Date("Ngày làm đơn", required=True, default=fields.Date.today)
     ngay_ap_dung = fields.Date("Ngày áp dụng", required=True)
     

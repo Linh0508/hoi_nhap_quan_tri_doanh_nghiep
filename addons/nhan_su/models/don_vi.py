@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields
 
 
 class DonVi(models.Model):
@@ -8,3 +8,9 @@ class DonVi(models.Model):
 
     ma_don_vi = fields.Char("Mã đơn vị", required=True)
     ten_don_vi = fields.Char("Tên đơn vị", required=True)
+
+    employee_ids = fields.One2many(
+        'hr.employee',
+        'don_vi_id',
+        string="Nhân viên"
+    )

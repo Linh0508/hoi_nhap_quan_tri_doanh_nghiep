@@ -1,0 +1,14 @@
+<odoo>
+    <record id="email_template_payroll" model="mail.template">
+        <field name="name">Gửi bảng lương</field>
+        <field name="model_id" ref="model_tinh_luong_bang_luong"/>
+        <field name="subject">Bảng lương tháng ${object.thang}/${object.nam}</field>
+        <field name="email_to">${object.ma_dinh_danh.work_email}</field>
+        <field name="body_html">
+            <![CDATA[
+            <p>Chào ${object.ma_dinh_danh.name},</p>
+            <p>Lương thực lĩnh: <b>${object.tong_nhan}</b></p>
+            ]]>
+        </field>
+    </record>
+</odoo>

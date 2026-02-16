@@ -41,7 +41,6 @@
             <field name="arch" type="xml">
                 <search>
                     <field name="nhan_vien_id"/>
-                        <field name="nhan_vien_id"/>
                         <field name="ngay_lam_don"/>
                         <field name="ngay_ap_dung"/>
                         <field name="trang_thai_duyet"/>

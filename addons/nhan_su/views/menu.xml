@@ -1,57 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
-        <menuitem
-            id="menu_root"
-            name="QLNS"
-            sequence="0"/>
-          
-        <menuitem name="Quản lý nhân viên" 
-            id="menu_nhan_vien" 
-            parent="menu_root" 
-            sequence="1"
-            action="action_nhan_vien"
-        />
 
-        <menuitem name="Danh mục dùng chung" 
-            id="danh_muc_dung_chung" 
-            parent="menu_root" 
-            sequence="2"
-        />
+    <!-- ACTION NHÂN VIÊN (mở danh sách trước) -->
+    <record id="action_nhan_vien_qlns" model="ir.actions.act_window">
+        <field name="name">Nhân viên</field>
+        <field name="res_model">hr.employee</field>
+        <field name="view_mode">tree,form</field>
+    </record>
 
-        <menuitem name="Danh mục phòng ban" 
-            id="menu_phong_ban" 
-            parent="danh_muc_dung_chung" 
-            sequence="0"
-            action="action_phong_ban"
-        />
+    <!-- Root Menu -->
+    <menuitem
+        id="menu_nhan_su_root"
+        name="Quản lý nhân sự"
+        sequence="0"/>
 
-        <menuitem name="Danh mục chức vụ" 
-            id="menu_chuc_vu" 
-            parent="danh_muc_dung_chung" 
-            sequence="1"
-            action="action_chuc_vu"
-        />
+    <!-- Nhân viên -->
+    <menuitem
+        id="menu_nhan_vien"
+        name="Nhân viên"
+        parent="menu_nhan_su_root"
+        action="action_nhan_vien_qlns"
+        sequence="1"/>
 
-        <menuitem name="Danh mục chứng chỉ bằng cấp" 
-            id="menu_chung_chi_bang_cap" 
-            parent="danh_muc_dung_chung" 
-            sequence="2"
-            action="action_chung_chi_bang_cap"
-        />
+    <!-- Danh mục -->
+    <menuitem
+        id="menu_danh_muc_dung_chung"
+        name="Danh mục dùng chung"
+        parent="menu_nhan_su_root"
+        sequence="2"/>
 
-        <menuitem name="Lịch sử công tác" 
-            id="lich_su_cong_tac" 
-            parent="menu_root" 
-            sequence="3"
-            action="action_lich_su_cong_tac"
-        />
+    <!-- Phòng ban -->
+    <menuitem
+        id="menu_phong_ban"
+        name="Phòng ban"
+        parent="menu_danh_muc_dung_chung"
+        action="action_phong_ban"/>
 
-        <menuitem name="Danh sách chứng chỉ bằng cấp" 
-            id="danh_sach_chung_chi_bang_cap" 
-            parent="menu_root" 
-            sequence="4"
-            action="action_danh_sach_chung_chi_bang_cap"
-        />
-    </data>
+    <!-- Chức vụ -->
+    <menuitem
+        id="menu_chuc_vu"
+        name="Chức vụ"
+        parent="menu_danh_muc_dung_chung"
+        action="action_chuc_vu"/>
+
+    <!-- Đơn vị -->
+    <menuitem
+        id="menu_don_vi"
+        name="Đơn vị"
+        parent="menu_danh_muc_dung_chung"
+        action="action_don_vi"/>
+
+    <!-- Chứng chỉ -->
+    <menuitem
+        id="menu_chung_chi"
+        name="Chứng chỉ"
+        parent="menu_danh_muc_dung_chung"
+        action="action_chung_chi_bang_cap"/>
+
+    <!-- Lịch sử công tác -->
+    <menuitem
+        id="menu_lich_su_cong_tac"
+        name="Lịch sử công tác"
+        parent="menu_nhan_su_root"
+        action="action_lich_su_cong_tac"
+        sequence="3"/>
+
+    <!-- Danh sách chứng chỉ -->
+    <menuitem
+        id="menu_danh_sach_chung_chi"
+        name="Danh sách chứng chỉ"
+        parent="menu_nhan_su_root"
+        action="action_danh_sach_cc"
+        sequence="4"/>
+
 </odoo>
