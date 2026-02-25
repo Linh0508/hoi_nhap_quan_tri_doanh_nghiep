@@ -1,54 +1,10 @@
-# sphinx build directories
-_build/
+# Loại bỏ thư mục môi trường ảo
+venv/
 
-# dotfiles
-.*
-!.gitignore
-!.github
-!.mailmap
-# compiled python files
-*.py[co]
+# Loại bỏ thư mục cấu hình GitHub (Actions, workflows...)
+.github/
+
+# Các file rác khác (nếu cần)
 __pycache__/
-# setup.py egg_info
-*.egg-info
-# emacs backup files
-*~
-# hg stuff
-*.orig
-status
-# odoo filestore
-odoo/filestore
-# maintenance migration scripts
-odoo/addons/base/maintenance
-# window installation config file
-/odoo.conf
-
-# generated for windows installer?
-install/win32/*.bat
-install/win32/meta.py
-
-# needed only when building for win32
-setup/win32/static/less/
-setup/win32/static/wkhtmltopdf/
-setup/win32/static/postgresql*.exe
-
-# js tooling
-node_modules
-jsconfig.json
-tsconfig.json
-package-lock.json
-package.json
-.husky
-
-# various virtualenv
-/bin/
-/build/
-/dist/
-/include/
-/lib/
-/man/
-/share/
-/src/
-/venv/
-/venv_15_01/
-/venv-du_an/
+*.pyc
+.env
