@@ -3,7 +3,7 @@
     <data>
         <menuitem
             id="menu_cham_cong_root"
-            name="Chấm công"
+            name="Quản lý chấm công"
             sequence="0"/>
           
         <menuitem name="Bảng chấm công" 
