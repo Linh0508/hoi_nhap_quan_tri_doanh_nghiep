@@ -2,12 +2,21 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from datetime import date
 import calendar
+from odoo import api, SUPERUSER_ID
+
 
 class BangLuong(models.Model):
     _name = 'tinh.luong.bang.luong'
     _description = 'Bảng tính lương'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = 'ma_dinh_danh'
+    _sql_constraints = [
+        (
+            'unique_salary',
+            'unique(ma_dinh_danh, thang, nam)',
+            'Nhân viên đã có bảng lương tháng này!'
+        )
+    ]
 
     ma_dinh_danh = fields.Many2one(
         'hr.employee',
@@ -60,10 +69,10 @@ class BangLuong(models.Model):
         store=True
     )
 
-    ngay_cong_chuan = fields.Integer(string="Công chuẩn", compute="_compute_attendance", store=True)
-    so_cong_thuc_te = fields.Integer(string="Công thực tế", compute="_compute_attendance", store=True)
-    so_ngay_huong_phu_cap = fields.Integer(string="Ngày đi làm", compute="_compute_attendance", store=True)
-    so_gio_tang_ca = fields.Float(string="Giờ tăng ca", compute="_compute_attendance", store=True)
+    ngay_cong_chuan = fields.Integer(string="Công chuẩn", compute="_compute_attendance")
+    so_cong_thuc_te = fields.Integer(string="Công thực tế", compute="_compute_attendance")
+    so_ngay_huong_phu_cap = fields.Integer(string="Ngày đi làm", compute="_compute_attendance")
+    so_gio_tang_ca = fields.Float(string="Giờ tăng ca", compute="_compute_attendance")
 
     tong_thu_nhap = fields.Float(
         string="Tổng thu nhập",
@@ -83,16 +92,17 @@ class BangLuong(models.Model):
         store=True
     )
 
-    tien_tang_ca = fields.Float(string="Tiền tăng ca", compute="_compute_breakdown", store=True)
-    tien_an_trua = fields.Float(string="Tiền ăn trưa", compute="_compute_breakdown", store=True)
-    tien_xang_xe = fields.Float(string="Tiền xăng xe", compute="_compute_breakdown", store=True)
-    tien_thuong_kpi = fields.Float(string="Thưởng KPI", compute="_compute_breakdown", store=True)
-    tien_phat_muon = fields.Float(string="Phạt đi muộn", compute="_compute_breakdown", store=True)
-    bhxh_nv = fields.Float(string="BHXH nhân viên", compute="_compute_breakdown", store=True)
-    thue_tncn = fields.Float(string="Thuế TNCN", compute="_compute_breakdown", store=True)
+    tien_tang_ca = fields.Float(string="Tiền tăng ca", compute="_compute_breakdown")
+    tien_an_trua = fields.Float(string="Tiền ăn trưa", compute="_compute_breakdown")
+    tien_xang_xe = fields.Float(string="Tiền xăng xe", compute="_compute_breakdown")
+    tien_thuong_kpi = fields.Float(string="Thưởng KPI", compute="_compute_breakdown")
+    tien_phat_muon = fields.Float(string="Phạt đi muộn", compute="_compute_breakdown")
+    bhxh_nv = fields.Float(string="BHXH nhân viên", compute="_compute_breakdown")
+    thue_tncn = fields.Float(string="Thuế TNCN", compute="_compute_breakdown")
 
     @api.depends('line_ids.amount', 'line_ids.line_type')
     def _compute_totals(self):
+        self = self.with_context(allow_write=True)
         for rec in self:
             thu = sum(l.amount for l in rec.line_ids if l.line_type == 'income')
             tru = sum(l.amount for l in rec.line_ids if l.line_type == 'deduction')
@@ -103,6 +113,7 @@ class BangLuong(models.Model):
 
     @api.depends('line_ids.amount', 'line_ids.name')
     def _compute_breakdown(self):
+        self = self.with_context(allow_write=True)
         for rec in self:
             rec.tien_tang_ca = 0
             rec.tien_an_trua = 0
@@ -130,6 +141,7 @@ class BangLuong(models.Model):
 
     @api.depends('ma_dinh_danh', 'thang', 'nam')
     def _compute_attendance(self):
+        self = self.with_context(allow_write=True)
         for rec in self:
             rec.ngay_cong_chuan = 0
             rec.so_cong_thuc_te = 0
@@ -141,12 +153,7 @@ class BangLuong(models.Model):
 
             _, days_in_month = calendar.monthrange(rec.nam, int(rec.thang))
 
-            cong_chuan = 0
-            for d in range(1, days_in_month + 1):
-                if date(rec.nam, int(rec.thang), d).weekday() < 5:
-                    cong_chuan += 1
-
-            rec.ngay_cong_chuan = cong_chuan
+            rec.ngay_cong_chuan = 26
 
             first_day = date(rec.nam, int(rec.thang), 1)
             last_day = date(rec.nam, int(rec.thang), days_in_month)
@@ -157,18 +164,35 @@ class BangLuong(models.Model):
                 ('ngay_cham_cong', '<=', last_day)
             ])
 
-            rec.so_lan_muon = len(
-                records_cc.filtered(lambda r: r.phut_di_muon > 0)
-            )
-            ngay_di_lam = len(records_cc.filtered(lambda r: r.loai_ngay_cong == 'di_lam'))
-            ngay_nghi_phep = len(records_cc.filtered(lambda r: r.loai_ngay_cong == 'nghi_phep'))
+            rec.so_lan_muon = sum(1 for r in records_cc if r.phut_di_muon > 0)
+
+            ngay_di_lam = len(records_cc.filtered(
+                lambda r: r.gio_vao
+            ))
+
+            ngay_nghi_phep = len(records_cc.filtered(
+                lambda r: r.loai_don == 'nghi'
+            ))
 
             rec.so_cong_thuc_te = ngay_di_lam + ngay_nghi_phep
             rec.so_ngay_huong_phu_cap = ngay_di_lam
-            rec.so_gio_tang_ca = sum(records_cc.mapped('so_gio_tang_ca'))
+            ot_hours = 0
+            for r in records_cc:
+
+                if not r.gio_ra or not r.gio_ra_ca:
+                    continue
+
+                overtime = (r.gio_ra - r.gio_ra_ca).total_seconds() / 3600
+
+                if overtime > 0:
+                    ot_hours += overtime
+
+            rec.so_gio_tang_ca = ot_hours
 
     def action_compute_salary(self):
+        self = self.with_context(allow_write=True)
         for rec in self:
+            rec._compute_attendance()
             if rec.state != 'draft':
                 raise UserError("Chỉ tính lương khi ở trạng thái Nháp!")
 
@@ -177,7 +201,9 @@ class BangLuong(models.Model):
 
             rec.line_ids.unlink()
 
-            config = rec.ma_dinh_danh.cau_hinh_luong_id[:1]
+            config = self.env['cau.hinh.luong'].search([
+                ('employee_id','=',rec.ma_dinh_danh.id)
+            ], limit=1)
             if not config:
                 raise UserError("Nhân viên chưa có cấu hình lương!")
             config = config[0]
@@ -194,11 +220,13 @@ class BangLuong(models.Model):
                 luong_thoi_gian = 0
 
             tien_an_trua = config.tro_cap_an_trua * rec.so_ngay_huong_phu_cap
-            tien_xang_xe = config.tro_cap_xang_xe
+            tien_xang_xe = config.tro_cap_xang_xe * rec.so_ngay_huong_phu_cap
             phu_cap_chuc_vu = config.phu_cap_chuc_vu
             phu_cap_co_dinh = config.phu_cap_co_dinh
 
-            tien_tang_ca = rec.so_gio_tang_ca * config.don_gia_tang_ca
+            luong_gio = config.luong_co_ban / (26 * 8)
+
+            tien_tang_ca = rec.so_gio_tang_ca * luong_gio * 1.5
 
             kpi_record = self.env['kpi.danh.gia'].search([
                 ('ma_dinh_danh', '=', rec.ma_dinh_danh.id),
@@ -226,9 +254,7 @@ class BangLuong(models.Model):
             add_line("Tiền xăng xe", tien_xang_xe, 'income')
             add_line("Thưởng KPI", tien_kpi, 'income')
 
-            tong_thu = sum(
-                l.amount for l in rec.line_ids if l.type == 'income'
-            )
+            tong_thu = sum(l.amount for l in rec.line_ids if l.line_type == 'income')
 
             bhxh = config.luong_bhxh * setting.ty_le_bhxh_nv
 
@@ -244,9 +270,10 @@ class BangLuong(models.Model):
             add_line("Thuế TNCN", thue, 'deduction')
 
     def action_confirm(self):
+        self = self.with_context(allow_write=True)
         for rec in self:
             if not rec.line_ids:
-                raise UserError("Bạn phải tính lương trước khi xác nhận!")
+                rec.action_compute_salary()
 
             _, days = calendar.monthrange(rec.nam, int(rec.thang))
             first_day = date(rec.nam, int(rec.thang), 1)
@@ -263,24 +290,45 @@ class BangLuong(models.Model):
             rec.state = 'confirmed'
 
     def action_pay(self):
+        self = self.with_context(allow_write=True)
         self.write({'state': 'paid'})
 
     def action_cancel(self):
+        self = self.with_context(allow_write=True)
         self.write({'state': 'cancel'})
 
     def action_set_draft(self):
+        self = self.with_context(allow_write=True)
         self.write({'state': 'draft'})
 
     def unlink(self):
+        self = self.with_context(allow_write=True)
         for rec in self:
+
             if rec.state != 'draft':
                 raise UserError("Chỉ có thể xóa khi ở trạng thái Nháp!")
+
+            _, days = calendar.monthrange(rec.nam, int(rec.thang))
+
+            first_day = date(rec.nam, int(rec.thang), 1)
+            last_day = date(rec.nam, int(rec.thang), days)
+
+            records_cc = self.env['bang_cham_cong'].search([
+                ('nhan_vien_id','=',rec.ma_dinh_danh.id),
+                ('ngay_cham_cong','>=',first_day),
+                ('ngay_cham_cong','<=',last_day)
+            ])
+
+            records_cc.write({'is_locked': False})
+
         return super().unlink()
 
     # ================== THÊM: KHÓA SỬA SAU CONFIRM ==================
     def write(self, vals):
         for rec in self:
-            if rec.state in ['confirmed', 'paid'] and not self.env.user.has_group('base.group_system'):
+            if rec.state in ['confirmed', 'paid'] \
+            and not self.env.user.has_group('base.group_system') \
+            and not self.env.context.get('allow_write'):
                 raise UserError("Chỉ Admin mới được chỉnh sửa khi đã xác nhận!")
         return super().write(vals)
 
@@ -310,4 +358,25 @@ class BangLuong(models.Model):
                     'ma_dinh_danh': emp.id,
                     'thang': str(thang),
                     'nam': nam
+                })
+
+    def init(self):
+        env = api.Environment(self._cr, SUPERUSER_ID, {})
+
+        employees = env['hr.employee'].search([])
+
+        for emp in employees:
+
+            exists = env['tinh.luong.bang.luong'].search([
+                ('ma_dinh_danh','=',emp.id),
+                ('thang','=','2'),
+                ('nam','=',2026)
+            ])
+
+            if not exists:
+
+                env['tinh.luong.bang.luong'].create({
+                    "ma_dinh_danh": emp.id,
+                    "thang": "2",
+                    "nam": 2026
                 })

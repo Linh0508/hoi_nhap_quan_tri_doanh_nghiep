@@ -7,6 +7,7 @@
     'license': 'LGPL-3',
     'depends': [
         'base',
+        'hr',
         'nhan_su',
         'cham_cong',
     ],

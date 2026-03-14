@@ -1,7 +1,8 @@
 from odoo import models, fields, api
 from datetime import datetime, date, timedelta
 import calendar
-
+from odoo import api, SUPERUSER_ID
+    
 class DotDangKy(models.Model):
     _name = 'dot_dang_ky'
     _description = "Bảng chứa thông tin đợt đăng ký"
@@ -26,8 +27,7 @@ class DotDangKy(models.Model):
             ("Đã đóng", "Đã đóng")
         ],
         string="Trạng thái đăng ký",
-        compute="_compute_trang_thai_dang_ky",
-        store=True
+        compute="_compute_trang_thai_dang_ky"
     )
     trang_thai_ap_dung = fields.Selection(
         [
@@ -36,8 +36,7 @@ class DotDangKy(models.Model):
             ("Chưa áp dụng", "Chưa áp dụng")
         ],
         string="Trạng thái áp dụng",
-        compute="_compute_trang_thai_ap_dung",
-        store=True
+        compute="_compute_trang_thai_ap_dung"
     )
     dang_ky_ca_lam_theo_ngay_ids = fields.One2many('dang_ky_ca_lam_theo_ngay', inverse_name='dot_dang_ky_id', string="Đăng ký ca làm")
 
@@ -89,3 +88,37 @@ class DotDangKy(models.Model):
                 record.ten_dot = f"Tháng {record.thang_dang_ky}/{record.nam_dang_ky}"
             else:
                 record.ten_dot = False
+                
+    def init(self):
+        env = api.Environment(self._cr, SUPERUSER_ID, {})
+
+        thang = "2"
+        nam = "2026"
+
+        dot = env['dot_dang_ky'].search([
+            ('thang_dang_ky','=',thang),
+            ('nam_dang_ky','=',nam)
+        ], limit=1)
+
+        if not dot:
+
+            employees = env['hr.employee'].search([])
+
+            if not employees:
+                return
+
+            dot = env['dot_dang_ky'].create({
+                "ma_dot": "DOT022026",
+                "nam_dang_ky": nam,
+                "thang_dang_ky": thang,
+                "han_dang_ky": "2026-01-25",
+                "nhan_vien_ids": [(6,0,employees.ids)]
+            })
+
+        # kiểm tra đã seed ca làm chưa
+        existed_seed = env['dang_ky_ca_lam_theo_ngay'].search([
+            ('dot_dang_ky_id','=',dot.id)
+        ], limit=1)
+
+        if not existed_seed:
+            env['dang_ky_ca_lam_theo_ngay']._seed_data(dot)

@@ -5,3 +5,4 @@ access_bcc_pay,bcc.pay,cham_cong.model_bang_cham_cong,group_role_payroll,1,0,0,0
 access_bang_luong_pay,bang_luong.pay,model_tinh_luong_bang_luong,group_role_payroll,1,1,1,1
 access_kpi_pay,kpi.pay,model_kpi_danh_gia,group_role_payroll,1,1,1,1
 access_bang_luong_line_pay,bang_luong_line.pay,model_tinh_luong_line,group_role_payroll,1,1,1,1
+access_payroll_setting_pay,payroll.setting pay,model_payroll_setting,group_role_payroll,1,1,1,1

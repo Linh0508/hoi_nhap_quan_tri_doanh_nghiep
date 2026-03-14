@@ -1,12 +1,21 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
-
+from odoo import api, SUPERUSER_ID
+from datetime import date, timedelta
+            
 class DangKyCaLamTheoNgay(models.Model):
     _name = 'dang_ky_ca_lam_theo_ngay'
     _description = "Đăng ký ca làm theo ngày"
     _rec_name = 'ma_dot_ngay'
     _order = 'dot_dang_ky_id desc, ngay_lam asc'
-
+    _sql_constraints = [
+        (
+            'unique_work_day',
+            'unique(dot_dang_ky_id, nhan_vien_id, ngay_lam)',
+            'Nhân viên đã có đăng ký ca ngày này!'
+        )
+    ]
+    
     ma_dot_ngay = fields.Char("Mã đợt ngày", required=True)
     dot_dang_ky_id = fields.Many2one('dot_dang_ky', string="Đợt đăng ký", required=True)
     nhan_vien_id = fields.Many2one('hr.employee', string="Nhân viên", required=True)
@@ -31,7 +40,7 @@ class DangKyCaLamTheoNgay(models.Model):
     def _check_nhan_vien_in_dot_dang_ky(self):
         for record in self:
             if record.nhan_vien_id not in record.dot_dang_ky_id.nhan_vien_ids:
-                raise ValidationError(f'Nhân viên {record.nhan_vien_id.ho_va_ten} không thuộc đợt đăng ký này!')
+                raise ValidationError(f'Nhân viên {record.nhan_vien_id.name} không thuộc đợt đăng ký này!')
 
     # --- Tự động hóa tạo Bảng chấm công ---
     @api.model_create_multi
@@ -53,9 +62,9 @@ class DangKyCaLamTheoNgay(models.Model):
         self.ensure_one()
         # Định nghĩa giờ theo ca làm (Có thể điều chỉnh logic lấy từ cấu hình hệ thống)
         times = {
-            'Sáng': {'gio_vao': 8.0, 'gio_ra': 12.0},
-            'Chiều': {'gio_vao': 13.0, 'gio_ra': 17.0},
-            'Cả ngày': {'gio_vao': 8.0, 'gio_ra': 17.0},
+            'Sáng': {'gio_vao': 7.5, 'gio_ra': 11.5},
+            'Chiều': {'gio_vao': 13.5, 'gio_ra': 17.5},
+            'Cả ngày': {'gio_vao': 7.5, 'gio_ra': 17.5},
         }
         
         ca_info = times.get(self.ca_lam, {'gio_vao': 0.0, 'gio_ra': 0.0})
@@ -77,3 +86,41 @@ class DangKyCaLamTheoNgay(models.Model):
             existing.write(vals)
         else:
             attendance_model.create(vals) 
+                
+    @api.model
+    def _seed_data(self, dot):
+
+        employees = dot.nhan_vien_ids
+
+        if not employees:
+            return
+
+        start = dot.ngay_bat_dau
+        end = dot.ngay_ket_thuc - timedelta(days=3)  # gần cuối tháng
+
+        days = []
+        d = start
+        while d <= end:
+            days.append(d)
+            d += timedelta(days=1)
+
+        ca_patterns = ["Cả ngày", "Sáng", "Chiều"]
+
+        for i, emp in enumerate(employees):
+
+            for j, day in enumerate(days):
+
+                existing = self.search([
+                    ('dot_dang_ky_id','=',dot.id),
+                    ('nhan_vien_id','=',emp.id),
+                    ('ngay_lam','=',day)
+                ], limit=1)
+
+                if not existing:
+                    self.create({
+                        "ma_dot_ngay": f"{dot.ma_dot}_{emp.id}_{day}",
+                        "dot_dang_ky_id": dot.id,
+                        "nhan_vien_id": emp.id,
+                        "ngay_lam": day,
+                        "ca_lam": ca_patterns[(i+j) % 3]
+                    })

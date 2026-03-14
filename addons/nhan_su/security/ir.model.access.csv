@@ -7,3 +7,4 @@ access_chuc_vu_hr,chuc_vu.hr,model_chuc_vu,group_role_hr,1,1,1,1
 access_lich_su_cong_tac_hr,lsct.hr,model_lich_su_cong_tac,group_role_hr,1,1,1,1
 access_chung_chi_hr,ccbc.hr,model_chung_chi_bang_cap,group_role_hr,1,1,1,1
 access_ds_chung_chi_hr,dscc.hr,model_danh_sach_chung_chi_bang_cap,group_role_hr,1,1,1,1
+access_cau_hinh_luong_hr,cau.hinh.luong.hr,model_cau_hinh_luong,group_role_hr,1,1,1,1

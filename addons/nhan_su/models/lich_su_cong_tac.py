@@ -1,6 +1,7 @@
 from odoo import models, fields, api
 from datetime import date
-
+from odoo import api, SUPERUSER_ID
+from datetime import date
 
 class LichSuCongTac(models.Model):
     _name = "lich_su_cong_tac"
@@ -57,3 +58,23 @@ class LichSuCongTac(models.Model):
                 record.trang_thai = "Đang giữ"
             else:
                 record.trang_thai = "Đã kết thúc"
+
+    def init(self):
+
+        env = api.Environment(self._cr, SUPERUSER_ID, {})
+
+        employee = env["hr.employee"].search([], limit=1)
+        chuc_vu = env["chuc_vu"].search([], limit=1)
+        phong_ban = env["phong_ban"].search([], limit=1)
+
+        if employee and chuc_vu and phong_ban:
+
+            if not env["lich_su_cong_tac"].search([("nhan_vien_id","=",employee.id)]):
+
+                env["lich_su_cong_tac"].create({
+                    "nhan_vien_id": employee.id,
+                    "chuc_vu_id": chuc_vu.id,
+                    "phong_ban_id": phong_ban.id,
+                    "loai_chuc_vu": "Chính",
+                    "ngay_bat_dau": date(2023,1,1)
+                })

@@ -2,7 +2,8 @@ from odoo import models, fields, api
 from datetime import datetime, time
 from pytz import timezone, UTC
 from odoo.exceptions import UserError
-
+from odoo import api, SUPERUSER_ID
+from datetime import datetime
 
 class BangChamCong(models.Model):
     _name = 'bang_cham_cong'
@@ -59,6 +60,7 @@ class BangChamCong(models.Model):
 
     loai_don = fields.Selection(
         related='don_tu_id.loai_don',
+        store=True,
         string='Loại đơn'
     )
 
@@ -67,25 +69,27 @@ class BangChamCong(models.Model):
         string='Số phút xin phép'
     )
 
+    def _link_related_data(self):
+        for record in self:
+
+            dk_ca = self.env['dang_ky_ca_lam_theo_ngay'].search([
+                ('nhan_vien_id', '=', record.nhan_vien_id.id),
+                ('ngay_lam', '=', record.ngay_cham_cong)
+            ], limit=1)
+
+            record.dang_ky_ca_lam_id = dk_ca.id if dk_ca else False
+
+            don = self.env['don_tu'].search([
+                ('nhan_vien_id', '=', record.nhan_vien_id.id),
+                ('ngay_ap_dung', '=', record.ngay_cham_cong),
+                ('trang_thai_duyet', '=', 'da_duyet')
+            ], limit=1)
+
+            record.don_tu_id = don.id if don else False
+
     @api.onchange('nhan_vien_id', 'ngay_cham_cong')
     def _onchange_link_data(self):
-        for record in self:
-            if record.nhan_vien_id and record.ngay_cham_cong:
-
-                dk_ca = self.env['dang_ky_ca_lam_theo_ngay'].search([
-                    ('nhan_vien_id', '=', record.nhan_vien_id.id),
-                    ('ngay_lam', '=', record.ngay_cham_cong)
-                ], limit=1)
-
-                record.dang_ky_ca_lam_id = dk_ca.id if dk_ca else False
-
-                don = self.env['don_tu'].search([
-                    ('nhan_vien_id', '=', record.nhan_vien_id.id),
-                    ('ngay_ap_dung', '=', record.ngay_cham_cong),
-                    ('trang_thai_duyet', '=', 'da_duyet')
-                ], limit=1)
-
-                record.don_tu_id = don.id if don else False
+        self._link_related_data()
 
     gio_vao_ca = fields.Datetime(
         compute='_compute_gio_ca',
@@ -102,33 +106,34 @@ class BangChamCong(models.Model):
 
     @api.depends('ca_lam', 'ngay_cham_cong')
     def _compute_gio_ca(self):
-        user_tz = self.env.user.tz or 'Asia/Ho_Chi_Minh'
-        tz = timezone(user_tz)
+
+        tz = timezone(self.env.user.tz or 'Asia/Ho_Chi_Minh')
 
         for record in self:
+
             if not record.ngay_cham_cong or not record.ca_lam:
                 record.gio_vao_ca = False
                 record.gio_ra_ca = False
                 continue
 
             times = {
-                "Sáng": (time(7, 30), time(11, 30)),
-                "Chiều": (time(13, 30), time(17, 30)),
-                "Cả ngày": (time(7, 30), time(17, 30))
+                "Sáng": (time(7,30), time(11,30)),
+                "Chiều": (time(13,30), time(17,30)),
+                "Cả ngày": (time(7,30), time(17,30))
             }
 
             if record.ca_lam in times:
+
                 v, r = times[record.ca_lam]
-                dt_v = tz.localize(
-                    datetime.combine(record.ngay_cham_cong, v)
-                ).astimezone(UTC).replace(tzinfo=None)
 
-                dt_r = tz.localize(
-                    datetime.combine(record.ngay_cham_cong, r)
-                ).astimezone(UTC).replace(tzinfo=None)
+                local_in = tz.localize(datetime.combine(record.ngay_cham_cong, v))
+                local_out = tz.localize(datetime.combine(record.ngay_cham_cong, r))
 
-                record.gio_vao_ca = dt_v
-                record.gio_ra_ca = dt_r
+                utc_in = local_in.astimezone(UTC).replace(tzinfo=None)
+                utc_out = local_out.astimezone(UTC).replace(tzinfo=None)
+
+                record.gio_vao_ca = utc_in
+                record.gio_ra_ca = utc_out
 
     phut_di_muon = fields.Float(
         compute="_compute_phut_phat",
@@ -177,6 +182,16 @@ class BangChamCong(models.Model):
                 record.phut_ve_som = max(0, vs_goc - record.thoi_gian_xin)
             else:
                 record.phut_ve_som = vs_goc
+                
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+
+        for record in records:
+            record._link_related_data()
+            record._generate_real_time()
+
+        return records
 
     @api.depends('phut_di_muon')
     def _compute_late_flag(self):
@@ -185,7 +200,124 @@ class BangChamCong(models.Model):
             record.is_late = record.late_minutes > 0
 
     def write(self, vals):
-        for record in self:
-            if record.is_locked:
-                raise UserError("Bảng công đã bị khóa, không thể chỉnh sửa.")
-        return super(BangChamCong, self).write(vals)
+        res = super().write(vals)
+
+        if 'ca_lam' in vals or 'ngay_cham_cong' in vals:
+            self._generate_real_time()
+
+        return res
+
+    def _generate_real_time(self):
+
+        tz = timezone('Asia/Ho_Chi_Minh')
+
+        for r in self:
+
+            ca = r.ca_lam
+            group = r.nhan_vien_id.id % 4
+            date = r.ngay_cham_cong
+
+            if not ca or not date:
+                continue
+
+            if ca == "Sáng":
+
+                schedule = {
+                    0: (time(7,30), time(11,30)),
+                    1: (time(7,40), time(11,30)),
+                    2: (time(7,30), time(11,10)),
+                    3: (time(8,0), time(11,0))
+                }
+
+            elif ca == "Chiều":
+
+                schedule = {
+                    0: (time(13,30), time(17,30)),
+                    1: (time(13,40), time(17,30)),
+                    2: (time(13,30), time(17,10)),
+                    3: (time(14,0), time(17,0))
+                }
+
+            else:
+
+                schedule = {
+                    0: (time(7,30), time(17,30)),
+                    1: (time(7,40), time(17,30)),
+                    2: (time(7,30), time(17,10)),
+                    3: (time(8,0), time(17,0))
+                }
+
+            start_time, end_time = schedule[group]
+
+            local_in = tz.localize(datetime.combine(date, start_time))
+            local_out = tz.localize(datetime.combine(date, end_time))
+
+            r.gio_vao = local_in.astimezone(UTC).replace(tzinfo=None)
+            r.gio_ra = local_out.astimezone(UTC).replace(tzinfo=None)
+
+    # def init(self):
+    #     env = api.Environment(self._cr, SUPERUSER_ID, {})
+    #     records = env['bang_cham_cong'].search([])
+
+    #     tz = timezone('Asia/Ho_Chi_Minh')
+
+    #     for r in records:
+
+    #         ca = r.ca_lam
+    #         group = r.nhan_vien_id.id % 4
+    #         date = r.ngay_cham_cong
+
+    #         if not ca or not date:
+    #             continue
+
+    #         # =========================
+    #         # XÁC ĐỊNH GIỜ THEO CA + GROUP
+    #         # =========================
+
+    #         if ca == "Sáng":
+
+    #             schedule = {
+    #                 0: (time(7,30), time(11,30)),
+    #                 1: (time(7,40), time(11,30)),
+    #                 2: (time(7,30), time(11,10)),
+    #                 3: (time(8,0), time(11,0))
+    #             }
+
+    #         elif ca == "Chiều":
+
+    #             schedule = {
+    #                 0: (time(13,30), time(17,30)),
+    #                 1: (time(13,40), time(17,30)),
+    #                 2: (time(13,30), time(17,10)),
+    #                 3: (time(14,0), time(17,0))
+    #             }
+
+    #         else:  # Cả ngày
+
+    #             schedule = {
+    #                 0: (time(7,30), time(17,30)),
+    #                 1: (time(7,40), time(17,30)),
+    #                 2: (time(7,30), time(17,10)),
+    #                 3: (time(8,0), time(17,0))
+    #             }
+
+    #         start_time, end_time = schedule[group]
+
+    #         # =========================
+    #         # CONVERT LOCAL → UTC
+    #         # =========================
+
+    #         local_in = tz.localize(datetime.combine(date, start_time))
+    #         local_out = tz.localize(datetime.combine(date, end_time))
+
+    #         gio_vao = local_in.astimezone(UTC).replace(tzinfo=None)
+    #         gio_ra = local_out.astimezone(UTC).replace(tzinfo=None)
+
+    #         # =========================
+    #         # GHI DATABASE
+    #         # =========================
+
+    #         r.write({
+    #             "gio_vao": gio_vao,
+    #             "gio_ra": gio_ra
+    #         })

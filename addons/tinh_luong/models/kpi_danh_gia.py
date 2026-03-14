@@ -2,6 +2,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from datetime import date, datetime
 import calendar
+from odoo import api, SUPERUSER_ID
 
 class KPIDanhGia(models.Model):
     _name = 'kpi.danh.gia'
@@ -55,11 +56,18 @@ class KPIDanhGia(models.Model):
                 date_end = date(rec.nam, thang_int, days_in_month)
                 
                 # Sửa lỗi logic: Đếm số bản ghi chấm công HỢP LỆ (không vắng mặt)
+                # cc_records = self.env['bang_cham_cong'].search_count([
+                #     ('nhan_vien_id', '=', rec.ma_dinh_danh.id),
+                #     ('ngay_cham_cong', '>=', date_start),
+                #     ('ngay_cham_cong', '<=', date_end),
+                #     ('trang_thai', 'in', ['di_lam', 'muon', 've_som']) # Chỉ tính những ngày có mặt
+                # ])
+
                 cc_records = self.env['bang_cham_cong'].search_count([
                     ('nhan_vien_id', '=', rec.ma_dinh_danh.id),
                     ('ngay_cham_cong', '>=', date_start),
                     ('ngay_cham_cong', '<=', date_end),
-                    ('trang_thai', 'in', ['di_lam', 'muon', 've_som']) # Chỉ tính những ngày có mặt
+                    ('gio_vao', '!=', False)
                 ])
                 
                 # 3. Tính % KPI (Giới hạn tối đa 100%)
@@ -94,5 +102,29 @@ class KPIDanhGia(models.Model):
 
     def action_recompute_kpi(self):
         """Tính toán lại cho các bản ghi đang chọn"""
-        self._compute_kpi_tu_dong()
+        for rec in self:
+            rec._compute_kpi_tu_dong()
         return True
+
+    def init(self):
+
+        env = api.Environment(self._cr, SUPERUSER_ID, {})
+
+        employees = env['hr.employee'].search([])
+
+        for emp in employees:
+
+            exists = env['kpi.danh.gia'].search([
+                ('ma_dinh_danh','=',emp.id),
+                ('thang','=','2'),
+                ('nam','=',2026)
+            ])
+
+            if not exists:
+
+                env['kpi.danh.gia'].create({
+                    "ma_dinh_danh": emp.id,
+                    "thang": "2",
+                    "nam": 2026,
+                    "state": "draft"
+                })
